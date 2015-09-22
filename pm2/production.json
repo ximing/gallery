@@ -1,0 +1,11 @@
+{
+  "apps": [{
+    "name": "images",
+    "script": "app.js",
+    "args": [],
+    "log_date_format": "YYYY-MM-DD HH:mm Z",
+    "node_args": "",
+    "cwd": ".",
+    "env": { "NODE_ENV": "production" }
+  }]
+}

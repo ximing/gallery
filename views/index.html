@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>WebUploader演示</title>
+    <link rel="stylesheet" type="text/css" href="/webuploader.css"/>
+    <link rel="stylesheet" type="text/css" href="/style.css"/>
+</head>
+<body>
+<div id="wrapper">
+    <div id="container">
+        <!--头部，相册选择和格式选择-->
+
+        <div id="uploader">
+            <div class="queueList">
+                <div id="dndArea" class="placeholder">
+                    <div id="filePicker"></div>
+                    <p>或将照片拖到这里，单次最多可选300张</p>
+                </div>
+            </div>
+            <div class="statusBar" style="display:none;">
+                <div class="progress">
+                    <span class="text">0%</span>
+                    <span class="percentage"></span>
+                </div>
+                <div class="info"></div>
+                <div class="btns">
+                    <div id="filePicker2"></div>
+                    <div class="uploadBtn">开始上传</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="fileList">
+
+    </div>
+
+</div>
+<script type="text/javascript" src="/jquery.js"></script>
+<script type="text/javascript" src="/webuploader.js"></script>
+<script src="/clipboard/ZeroClipboard.js"></script>
+<script type="text/javascript">
+    (function ($) {
+        $(function () {
+            ZeroClipboard.config({swfPath: "/clipboard/ZeroClipboard.swf"});
+            var $ = jQuery,
+            $list = $('#fileList'),
+            // Web Uploader实例
+            uploader;
+
+            // 初始化Web Uploader
+            uploader = WebUploader.create({
+
+                // 自动上传。
+                auto: true,
+
+                // swf文件路径
+                swf: '/Uploader.swf',
+
+                // 文件接收服务端。
+                server: '/upload',
+                dnd: '#dndArea',
+                paste: '#uploader',
+                // 选择文件的按钮。可选。
+                // 内部根据当前运行是创建，可能是input元素，也可能是flash.
+                pick: {
+                    id: '#filePicker',
+                    label: '点击选择图片'
+                },
+                disableGlobalDnd: true,
+                fileNumLimit: 300,
+                fileSizeLimit: 200 * 1024 * 1024,    // 200 M
+                fileSingleSizeLimit: 50 * 1024 * 1024    // 50 M
+            });
+            // 优化retina, 在retina下这个值是2
+            var ratio = window.devicePixelRatio || 1,
+            // 缩略图大小
+            thumbnailWidth = 30 * ratio,
+            thumbnailHeight = 30 * ratio;
+            // 当有文件添加进来的时候
+            uploader.on('fileQueued', function (file) {
+                var $li = $(
+                        '<div id="' + file.id + '" class="file-item thumbnail">' +
+                        '<img>' +
+                        '<div class="info">' + file.name + '</div>' +
+                        '<div id="jieguo' + file.id + '"></div>' +
+                        '</div>'
+                ),
+                $img = $li.find('img');
+
+                $list.append($li);
+
+                // 创建缩略图
+                uploader.makeThumb(file, function (error, src) {
+                    if (error) {
+                        $img.replaceWith('<span>不能预览</span>');
+                        return;
+                    }
+
+                    $img.attr('src', src);
+                }, thumbnailWidth, thumbnailHeight);
+            });
+
+            // 文件上传过程中创建进度条实时显示。
+            uploader.on('uploadProgress', function (file, percentage) {
+                var $li = $('#' + file.id),
+                $percent = $li.find('.progress span');
+
+                // 避免重复创建
+                if (!$percent.length) {
+                    $percent = $('<p class="progress"><span></span></p>')
+                            .appendTo($li)
+                            .find('span');
+                }
+
+                $percent.css('width', percentage * 100 + '%');
+            });
+
+            // 文件上传成功，给item添加成功class, 用样式标记上传成功。
+            uploader.on('uploadSuccess', function (file, response) {
+                $('#' + file.id).addClass('upload-state-done');
+                $('#jieguo' + file.id).prepend('' +
+                        '<button class="copy" id="copymd' + file.id + '" data-clipboard-text="' + response.markdown + '">markdown</button>' +
+                        '<button class="copy" id="copysr' + file.id + '" data-clipboard-text="' + response.src + '">src</button>');
+                var clientmd = new ZeroClipboard($(".copy"));
+//                var clientht = new ZeroClipboard(document.getElementById("my-button"));
+//                var clientsr = new ZeroClipboard(document.getElementById("my-button"));
+
+            });
+
+            // 文件上传失败，现实上传出错。
+            uploader.on('uploadError', function (file) {
+                var $li = $('#' + file.id),
+                $error = $li.find('div.error');
+
+                // 避免重复创建
+                if (!$error.length) {
+                    $error = $('<div class="error"></div>').appendTo($li);
+                }
+
+                $error.text('上传失败');
+            });
+
+            // 完成上传完了，成功或者失败，先删除进度条。
+            uploader.on('uploadComplete', function (file) {
+                $('#' + file.id).find('.progress').remove();
+            });
+        });
+
+    })($);
+</script>
+</body>
+</html>
