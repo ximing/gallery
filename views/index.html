@@ -88,7 +88,7 @@
                 ),
                 $img = $li.find('img');
 
-                $list.append($li);
+                $list.prepend($li);
 
                 // 创建缩略图
                 uploader.makeThumb(file, function (error, src) {
@@ -119,7 +119,7 @@
             // 文件上传成功，给item添加成功class, 用样式标记上传成功。
             uploader.on('uploadSuccess', function (file, response) {
                 $('#' + file.id).addClass('upload-state-done');
-                $('#jieguo' + file.id).prepend('' +
+                $('#jieguo' + file.id).append('' +
                         '<button class="copy" id="copymd' + file.id + '" data-clipboard-text="' + response.markdown + '">markdown</button>' +
                         '<button class="copy" id="copysr' + file.id + '" data-clipboard-text="' + response.src + '">src</button>');
                 var clientmd = new ZeroClipboard($(".copy"));
