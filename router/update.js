@@ -7,6 +7,7 @@ var parse = require('co-busboy');
 var views = require('co-views');
 var env = process.env.NODE_ENV || "development";
 var streamHelper = require('../lib/streamPipeStream');
+var qiniu = require('../lib/qiniu');
 
 
 var versionIndex = function*() {
@@ -27,12 +28,17 @@ var fileUpload = function*() {
             path_temp = path.join('/usr/share/nginx/html/images/' + fileName);
         }
         var stream = fs.createWriteStream(path_temp);
-        part.pipe(stream);
+        yield streamHelper.pipe(part,stream);
+        //part.pipe(stream);
+        var url = yield qiniu(path_temp,fileName);
+        fs.unlinkSync(path_temp);
+        console.log('******',url);
         this.body = {
-            markdown: '![' + fileName + '](http://images.yeanzhi.cn/' + fileName + ')',
-            src: 'http://images.yeanzhi.cn/' + fileName
+            markdown: url,
+            src: url
         }
     }
+
 };
 
 exports.register = function (router) {
